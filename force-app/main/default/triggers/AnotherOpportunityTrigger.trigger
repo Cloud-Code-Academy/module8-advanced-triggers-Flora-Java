@@ -21,12 +21,13 @@ https://developer.salesforce.com/blogs/developer-relations/2015/01/apex-best-pra
 trigger AnotherOpportunityTrigger on Opportunity (before insert, after insert, before update, after update, before delete, after delete, after undelete) {
     if (Trigger.isBefore){
         if (Trigger.isInsert){
-            // Set default Type for new Opportunities
+// Set default Type for new Opportunities
             Opportunity opp = Trigger.new[0];
             if (opp.Type == null){
                 opp.Type = 'New Customer';
             }        
-        } else if (Trigger.isDelete){
+        } else 
+        if (Trigger.isDelete){
             // Prevent deletion of closed Opportunities
             for (Opportunity oldOpp : Trigger.old){
                 if (oldOpp.IsClosed){
@@ -35,6 +36,7 @@ trigger AnotherOpportunityTrigger on Opportunity (before insert, after insert, b
             }
         }
     }
+
 
     if (Trigger.isAfter){
         if (Trigger.isInsert){
