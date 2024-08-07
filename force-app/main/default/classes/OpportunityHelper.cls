@@ -12,12 +12,17 @@ public with sharing class OpportunityHelper {
     public static void  dontDeleteClosed(List<Opportunity> opps) {
         Map<Id, Account> accounts = new Map<Id, Account>([SELECT Id, Industry FROM Account WHERE Id IN (SELECT AccountId FROM Opportunity WHERE Id IN :opps ) WITH SECURITY_ENFORCED]);
         for(Opportunity opp : opps) {
+            if(opp.StageName == 'Closed Won' && accounts.get(opp.AccountId).Industry == 'Banking') {
+                opp.addError('Cannot delete closed opportunity');
+                continue;
+            }
             if (opp.StageName == 'Closed Won') {
-                if(accounts.get(opp.AccountId).Industry == 'Banking') {
                 opp.addError('Cannot delete closed opportunity');
-                } else {
+                continue;
+            }
+            if (opp.StageName == 'Closed Lost') {
                 opp.addError('Cannot delete closed opportunity');
-                }
+                continue;
             }
         }
     }
@@ -56,7 +61,7 @@ public with sharing class OpportunityHelper {
         }
     }
 
-    //Append stage changes to Opp description before update
+    //Check amount to be > 5000 before update
     public static void beforeUpdateQuantityCheck(List<Opportunity> opps) {
         for(Opportunity opp : opps){
             if(opp.Amount < 5000){
@@ -69,7 +74,6 @@ public with sharing class OpportunityHelper {
         for(Opportunity opp : opps){
             accountIds.add(opp.AccountId);
         }
-        System.debug('*** accountIds: ' + accountIds);
         Map<Id, Contact> contacts = new Map<Id, Contact>([SELECT Id, FirstName, AccountId FROM Contact WHERE AccountId IN :accountIds AND Title = 'CEO' ORDER BY FirstName ASC]);
         Map<Id, Contact> accountIdToContact = new Map<Id, Contact>();
 
@@ -81,7 +85,7 @@ public with sharing class OpportunityHelper {
 
         for(Opportunity opp : opps){
             if (accountIdToContact.containsKey(opp.AccountId)) {
-                Contact ceoContact = mapContact.get(opp.AccountId);
+                Contact ceoContact = accountIdToContact.get(opp.AccountId);
                 opp.Primary_Contact__c = ceoContact.Id; 
             }
         }
@@ -101,6 +105,7 @@ public with sharing class OpportunityHelper {
                 ));
             }
         }
+        update as user oppsToUpdate;
         
     }
 
